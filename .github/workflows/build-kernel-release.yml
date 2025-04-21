@@ -14,11 +14,11 @@ on:
         default: false
 
 jobs:
-  build-batch-1: # Non Bazel Builds
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
+  #build-batch-1: # Non Bazel Builds
+    #strategy:
+      #fail-fast: false
+      #matrix:
+        #include:
          # - model: OP11
          #   soc: kalama
          #   branch: oneplus/sm8550
@@ -49,27 +49,27 @@ jobs:
          #   manifest: oneplus_10t_v.xml
          #   android_version: android12
          #   kernel_version: "5.10"
-          - model: OP10pro
-            soc: waipio
-            branch: oneplus/sm8450
-            manifest: oneplus_10_pro_v.xml
-            android_version: android12
-            kernel_version: "5.10"
-          - model: OP-ACE-2-PRO
-            soc: kalama
-            branch: oneplus/sm8550
-            manifest: oneplus_ace2pro_v.xml
-            android_version: android13
-            kernel_version: "5.15"
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      model: ${{ matrix.model }}
-      soc: ${{ matrix.soc }}
-      branch: ${{ matrix.branch }}
-      manifest: ${{ matrix.manifest }}
-      android_version: ${{ matrix.android_version }}
-      kernel_version: ${{ matrix.kernel_version }}
+         # - model: OP10pro
+         #   soc: waipio
+         #   branch: oneplus/sm8450
+         #   manifest: oneplus_10_pro_v.xml
+         #   android_version: android12
+         #   kernel_version: "5.10"
+         # - model: OP-ACE-2-PRO
+         #   soc: kalama
+         #   branch: oneplus/sm8550
+         #   manifest: oneplus_ace2pro_v.xml
+         #   android_version: android13
+         #   kernel_version: "5.15"
+    #uses: ./.github/workflows/build.yml
+    #secrets: inherit
+    #with:
+      #model: ${{ matrix.model }}
+      #soc: ${{ matrix.soc }}
+      #branch: ${{ matrix.branch }}
+      #manifest: ${{ matrix.manifest }}
+      #android_version: ${{ matrix.android_version }}
+      #kernel_version: ${{ matrix.kernel_version }}
 
   build-batch-2:
     # needs: build-batch-1
@@ -86,7 +86,7 @@ jobs:
          # - model: OPAce5Pro
          #   soc: sun
          #   branch: oneplus/sm8750
-         #   manifest: JiuGeFaCai_oneplus_ace5_pro_v.xml
+         #   manifest: oneplus_ace5_pro.xml
          #   android_version: android15
          #   kernel_version: "6.6"
          # - model: OP12
@@ -125,33 +125,41 @@ jobs:
 
   trigger-release:
     needs:
-      - build-batch-1
+    # - build-batch-1
       - build-batch-2
     runs-on: ubuntu-latest
     if: ${{ inputs.make_release }}
     env:
-      REPO_OWNER: FerGus786
-      REPO_NAME: OnePlus_13_KernelSU_SUSFS
+      REPO_OWNER: ${{ github.repository_owner }}
+      REPO_NAME: ${{ github.event.repository.name }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_NAME: "OnePlus 13 Kernel With KernelSU Next & SUSFS v1.5.5"
       RELEASE_NOTES: |
         This release contains KernelSU Next Stable and SUSFS v1.5.5
         
+        KSUN Manager:
+        -> https://github.com/KernelSU-Next/KernelSU-Next
+        
         SUSFS Module:
         -> https://github.com/sidex15/ksu_module_susfs
         
-        KSUN Manager:
-        -> https://github.com/KernelSU-Next/KernelSU-Next
-
+        Mountify Module:
+        -> https://github.com/backslashxx/mountify
+        
+        Unlimited Hotspot Module:
+        -> https://github.com/felikcat/unlimited-hotspot
+        
         Features:
-        [+] KernelSU-Next (12490)
+        [+] KernelSU-Next (Stable)
         [+] SUSFS v1.5.5
+        [+] Google BBR Support (enabled by default)
+        [+] Magic Mount Support
         [+] Maphide LineageOS Detections
         [+] Futile Maphide for jit-zygote-cache Detections
-        [+] Magic Mount Support
         [+] Mountify Support
-        [+] BBR Support
         [+] Unlimited Hotspot Support
+        [+] Forced ECN (Explicit Congestion Notification) for all connections by default
+        [+] Some minor optimizations
 
     steps:
       - name: Checkout code
