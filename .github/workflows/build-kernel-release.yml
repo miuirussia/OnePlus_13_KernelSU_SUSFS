@@ -137,6 +137,9 @@ jobs:
       RELEASE_NOTES: |
         This release contains KernelSU Next Stable and SUSFS v1.5.5
         
+        Horizon Kernel Flasher:
+        -> https://github.com/libxzr/HorizonKernelFlasher
+        
         KSUN Manager:
         -> https://github.com/KernelSU-Next/KernelSU-Next
         
