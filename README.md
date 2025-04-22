@@ -8,7 +8,7 @@ I am **NOT RESPONSIBLE** for bricked devices, damaged hardware, or any issues th
 By flashing this kernel, **YOU** are choosing to make these modifications. If something goes wrong, **DO NOT** blame me!
 ## ⚠️Proceed at your own risk!
 
-## 🌠Credits
+## 🚀Credits
 
 - [@fatalcoder524](https://github.com/fatalcoder524/OnePlus_KernelSU_SUSFS) and [@TheWildJames](https://github.com/WildPlusKernel/OnePlus_KernelSU_SUSFS) : <ins>Original</ins> projects.
 - [@RifsxD](https://github.com/KernelSU-Next/KernelSU-Next) : KernelSU-Next idea.
