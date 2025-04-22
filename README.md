@@ -6,7 +6,7 @@ OnePlus 13 Kernel with KernelSU Next &amp; SUSFS (personal fork)
 I am **NOT RESPONSIBLE** for bricked devices, damaged hardware, or any issues that arise from using this kernel.
 
 By flashing this kernel, **YOU** are choosing to make these modifications. If something goes wrong, **DO NOT** blame me!
-## ⚠️Proceed at your own risk!
+## 🚧Proceed at your own risk!
 
 ## 🚀Credits
 
