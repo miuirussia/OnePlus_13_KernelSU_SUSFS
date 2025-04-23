@@ -232,11 +232,6 @@ jobs:
           echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig
           
-          # Add scheduler config setting
-          echo "CONFIG_SCHED_DEBUG=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_SCHED_INFO=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_SCHEDSTATS=n" >> ./common/arch/arm64/configs/gki_defconfig
-          
           # Add rcu config setting
           echo "CONFIG_RCU_TRACE=n" >> ./common/arch/arm64/configs/gki_defconfig
           if [ "${{ inputs.kernel_version }}" == "6.6" ]; then
@@ -259,9 +254,10 @@ jobs:
           sed -i 's/net->ipv4.sysctl_tcp_pacing_ss_ratio = 200;/net->ipv4.sysctl_tcp_pacing_ss_ratio = 160;/' tcp_ipv4.c
           sed -i 's/net->ipv4.sysctl_tcp_pacing_ca_ratio = 120;/net->ipv4.sysctl_tcp_pacing_ca_ratio = 110;/' tcp_ipv4.c
           grep "sysctl_tcp_pacing" tcp_ipv4.c
-          #curl -O --time-cond tcp_cdg.c https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/net/ipv4/tcp_cdg.c
-          #curl -O --time-cond tcp_bbr.c https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/net/ipv4/tcp_bbr.c
+          #curl -z tcp_cdg.c -O https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/net/ipv4/tcp_cdg.c
+          #curl -z tcp_bbr.c -O https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/net/ipv4/tcp_bbr.c
           ls -t | grep -E 'tcp_|sysctl_'
+          curl -z sch_cake.c -o ../sched/sch_cake.c https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/net/sched/sch_cake.c
 
       - name: Run sed and perl Commands
         run: |
@@ -276,14 +272,15 @@ jobs:
           
           # Run sed commands for modifications
           sed -i 's/check_defconfig//' ./common/build.config.gki
-          sed -i 's|echo "\$res"|res=\$\(echo \$res \| cut -d- -f1-4\)-FerK\);echo "\$res"|g' ./common/scripts/setlocalversion
-          sed -i 's|echo "\$res"|res=\$\(echo \$res \| cut -d- -f1-4\)-FerK\);echo "\$res"|g' ./msm-kernel/scripts/setlocalversion
-          sed -i 's|echo "\$res"|res=\$\(echo \$res \| cut -d- -f1-4\)-FerK\);echo "\$res"|g' ./external/dtc/scripts/setlocalversion
+          #sed -i '$s|echo "\$res"|echo "\$res-FerK"|' ./common/scripts/setlocalversion
+          #sed -i '$s|echo "\$res"|echo "\$res-FerK"|' ./msm-kernel/scripts/setlocalversion
+          #sed -i '$s|echo "\$res"|echo "\$res-FerK"|' ./external/dtc/scripts/setlocalversion
           sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl || echo "No stamp.bzl!"
           sed -i 's/-dirty//' ./common/scripts/setlocalversion
           sed -i 's/-dirty//' ./msm-kernel/scripts/setlocalversion
           sed -i 's/-dirty//' ./external/dtc/scripts/setlocalversion
           sed -i 's/-dirty//' ./build/kernel/kleaf/workspace_status_stamp.py || echo "No workspace_status_stamp.py!"
+          for file in $(find ${GITHUB_WORKSPACE} -type f -name 'setlocalversion' 2>/dev/null); do echo $file; sed -i 's/echo \"\$res\"/res\=\$\(echo \$res \| cut -d- -f1-4\)-FerK\; echo \"\$res\"/g' $file; done
 
           sed -i '/echo "LTO $LTO "/i export LTO=thin' ./oplus/build/oplus_setup.sh
           sed -i 's/export REPACK_IMG=true/export REPACK_IMG=false/g' ./oplus/build/oplus_setup.sh
