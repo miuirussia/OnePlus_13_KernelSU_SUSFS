@@ -313,10 +313,13 @@ jobs:
         if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
         run: |
           echo "Preparing kernel source: $CONFIG"
-          cd "$CONFIG/kernel_platform"
+          cd "$CONFIG"
           sudo apt install -y pigz
           tar -cf "source-patched-$CONFIG.tar.gz" \
-              --use-compress-program=pigz .
+          --directory="kernel_platform" \
+          --use-compress-program=pigz \
+          --exclude='.git' --exclude='out' \
+          .
 
       - name: Upload patched kernel source
         if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
@@ -325,7 +328,7 @@ jobs:
           #name: source-patched-${{ env.CONFIG }}
           path: source-patched-${{ env.CONFIG }}.tar.gz
 
-      - name: Remove patched kernel source
+      - name: Clear patched kernel source
         if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
         run: |
           rm "source-patched-$CONFIG.tar.gz"
