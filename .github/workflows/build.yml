@@ -300,12 +300,12 @@ jobs:
         if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
         run: |
           echo "Preparing kernel source: $CONFIG"
-          cd "$CONFIG"
+          cd "$GITHUB_WORKSPACE"
           sudo apt install -y pigz
           tar -cf "source-patched-$CONFIG.tar.gz" \
           --use-compress-program=pigz \
           --exclude='.git' --exclude='out' \
-          -C kernel_platform .
+          -C "$CONFIG/kernel_platform" .
 
       - name: Upload patched kernel source
         if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
