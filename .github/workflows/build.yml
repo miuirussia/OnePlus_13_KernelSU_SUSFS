@@ -304,7 +304,7 @@ jobs:
           tar -cf "source-patched-$CONFIG.tar.gz" \
           --use-compress-program=pigz \
           --exclude='.git' --exclude='out' \
-          --exclude="source-patched-$CONFIG.tar.gz" \ # Anti-Harakiri
+          --exclude="source-patched-$CONFIG.tar.gz" \
           .
 
       - name: Upload patched kernel source
