@@ -301,7 +301,7 @@ jobs:
         run: |
           echo "Preparing kernel source: $CONFIG"
           cd "$GITHUB_WORKSPACE"
-          sudo apt install -y pigz
+          sudo apt install -y tar && sudo apt install -y pigz
           tar -cf "source-patched-$CONFIG.tar.gz" \
           --use-compress-program=pigz \
           --exclude='.git' --exclude='out' \
@@ -311,14 +311,14 @@ jobs:
         if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
         uses: actions/upload-artifact@v4
         with:
-          name: source-patched-${{ env.CONFIG }}
+          name: source-patched-${{ env.CONFIG }}.tar.gz
           path: source-patched-${{ env.CONFIG }}.tar.gz
           compression-level: 0
 
       - name: Clear patched kernel source
         if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
         run: |
-          rm "source-patched-$CONFIG.tar.gz"
+          rm "$GITHUB_WORKSPACE/source-patched-$CONFIG.tar.gz"
 
       - name: Build the Kernel
         run: |
