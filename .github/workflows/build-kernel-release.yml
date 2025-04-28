@@ -135,7 +135,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_NAME: "OnePlus 13 Kernel With KernelSU Next & SUSFS"
       RELEASE_NOTES: |
-        This release contains KernelSU Next Stable with the latest available SUSFS
+        This release contains both the latest available KernelSU Next and SUSFS
         
         Horizon Kernel Flasher:
         -> https://github.com/libxzr/HorizonKernelFlasher
@@ -153,9 +153,9 @@ jobs:
         -> https://github.com/felikcat/unlimited-hotspot
         
         Features:
-        [+] KernelSU-Next Stable
+        [+] KernelSU-Next
         [+] SUSFS ඞ
-        [+] Magic Mount Support | Shamiko isn't required!
+        [+] Magic Mount Support | Shamiko isn't needed anymore!
         [+] Google BBRv3 Support
         [+] Maphide LineageOS Detections
         [+] Futile Maphide for jit-zygote-cache Detections

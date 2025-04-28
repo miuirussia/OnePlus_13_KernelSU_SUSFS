@@ -37,19 +37,6 @@ jobs:
           
           df -h
           
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/powershell /usr/share/swift || true
-          sudo docker image prune --all --force
-          echo "some directories deleted"
-          rm -vr OP13 || true
-          sudo rm -vr /home/runner/work/OnePlus_13_KernelSU_SUSFS/OnePlus_13_KernelSU_SUSFS/OP13 || true
-          sudo rm -vr ~/.cache/bazel/* || true
-          sudo rm -vr /home/.cache/bazel/* || true
-          sudo rm -vr /home/runner/.cache/bazel/* || true
-          sudo rm -vr /home/runner/work/.cache/bazel/* || true
-          sudo rm -vr /home/runner/work/OnePlus_13_KernelSU_SUSFS/.cache/bazel/* || true
-          sudo rm -vr /home/runner/work/OnePlus_13_KernelSU_SUSFS/OnePlus_13_KernelSU_SUSFS/.cache/bazel/* || true
-          echo "clean build!?"
-          
           # Remove large unwanted packages
           sudo apt-get purge -y \
             aria2 ansible azure-cli shellcheck rpm xorriso zsync \
@@ -144,7 +131,7 @@ jobs:
           
           git submodule update --init --recursive
           cd KernelSU-Next/kernel
-          KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD) "+" 10200)
+          KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD) "+" 10198)
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           sed -i "s/DKSU_VERSION=11998/DKSU_VERSION=${KSU_VERSION}/" Makefile
 
@@ -313,10 +300,8 @@ jobs:
         if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
         run: |
           echo "Preparing kernel source: $CONFIG"
-          cd "$CONFIG"
           sudo apt install -y pigz
           tar -cf "source-patched-$CONFIG.tar.gz" \
-          --directory="kernel_platform" \
           --use-compress-program=pigz \
           --exclude='.git' --exclude='out' \
           .
@@ -325,7 +310,7 @@ jobs:
         if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
         uses: actions/upload-artifact@v4
         with:
-          #name: source-patched-${{ env.CONFIG }}
+          name: source-patched-${{ env.CONFIG }}
           path: source-patched-${{ env.CONFIG }}.tar.gz
 
       - name: Clear patched kernel source
