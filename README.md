@@ -10,7 +10,7 @@ By flashing this kernel, **YOU** are choosing to make these modifications. If so
 
 ## 🚀 Credits
 
-- [@fatalcoder524](https://github.com/fatalcoder524/OnePlus_KernelSU_SUSFS) and [@TheWildJames](https://github.com/WildPlusKernel/OnePlus_KernelSU_SUSFS) : Original projects.🙏
+- [@fatalcoder524](https://github.com/fatalcoder524/OnePlus_KernelSU_SUSFS) and [@TheWildJames](https://github.com/WildPlusKernel/OnePlus_KernelSU_SUSFS) : Original projects. 🙏
 - [@RifsxD](https://github.com/KernelSU-Next/KernelSU-Next) : KernelSU-Next idea.
 - [@simonpunk](https://gitlab.com/simonpunk/susfs4ksu.git) : SUSFS patches.
 - [@sidex15](https://github.com/sidex15/susfs4ksu-module) : SUSFS userspace tool.
