@@ -235,6 +235,9 @@ jobs:
           # Add scheduler config setting
           echo "CONFIG_SCHEDSTATS=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_SCHED_INFO=n" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_SCHED_DEBUG=n" >> ./common/arch/arm64/configs/gki_defconfig
+          sed -i '/^  __traceiter_sched_stat_blocked$/d; /^  __traceiter_sched_stat_iowait$/d; /^  __traceiter_sched_stat_sleep$/d; /^  __traceiter_sched_stat_wait$/d' ./common/android/abi_gki_aarch64_oplus
+          sed -i '/^  __tracepoint_sched_stat_blocked$/d; /^  __tracepoint_sched_stat_iowait$/d; /^  __tracepoint_sched_stat_sleep$/d; /^  __tracepoint_sched_stat_wait$/d' ./common/android/abi_gki_aarch64_oplus
           
           # Add rcu config setting
           echo "CONFIG_RCU_TRACE=n" >> ./common/arch/arm64/configs/gki_defconfig
