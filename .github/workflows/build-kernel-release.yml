@@ -135,10 +135,10 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_NAME: "OnePlus 13 Kernel With KernelSU Next & SUSFS"
       RELEASE_NOTES: |
-        This release contains both the latest available KernelSU Next and SUSFS
+        This release contains both the latest available KernelSU Next and SUSFS!
         
-        Horizon Kernel Flasher:
-        -> https://github.com/libxzr/HorizonKernelFlasher
+        Modified Kernel Flasher:
+        -> https://github.com/fatalcoder524/KernelFlasher
         
         KSUN Manager:
         -> https://github.com/KernelSU-Next/KernelSU-Next
