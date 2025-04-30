@@ -113,6 +113,30 @@ jobs:
           $REPO --version
           $REPO --trace sync -c --no-clone-bundle --no-tags --optimized-fetch -j$(nproc --all) --fail-fast
 
+      - name: Compress original kernel source
+        if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
+        run: |
+          echo "Preparing kernel source: $CONFIG"
+          cd "$GITHUB_WORKSPACE"
+          tar -cf "source-original-$CONFIG.tar.gz" \
+          --use-compress-program=pigz \
+          --exclude='.git' --exclude='out' \
+          -C "$CONFIG/kernel_platform" common
+
+      - name: Upload original kernel source
+        if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-original-${{ env.CONFIG }}
+          path: source-original-${{ env.CONFIG }}.tar.gz
+          compression-level: 0
+          retention-days: 2
+
+      - name: Clear original kernel source
+        if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
+        run: |
+          rm -v "source-original-$CONFIG.tar.gz"
+
       - name: Merge BBR v3 into Kernel Source
         if: ${{ inputs.kernel_version == '6.6' }}
         run: |
@@ -123,7 +147,7 @@ jobs:
           git fetch google-bbr v3
           git show-ref --verify --quiet refs/remotes/google-bbr/v3 || { echo "Error: google-bbr/v3 branch not found"; exit 1; }
           git merge google-bbr/v3 --allow-unrelated-histories -m "Merge BBR v3 into kernel"
-          sed -i 's/\.name[[:space:]]*=[[:space:]]*"bbr",/\.name = "bbr3",/' ./common/net/ipv4/tcp_bbr.c
+          sed -i 's/^\([[:space:]]*\)\.name[[:space:]]*=[[:space:]]*"bbr",/\1.name = "bbr3",/' ./common/net/ipv4/tcp_bbr.c
 
       - name: Add KernelSU
         run: |
@@ -221,26 +245,20 @@ jobs:
           # Add bbr and fq config setting
           echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
-          #echo "CONFIG_DEFAULT_CUBIC=n" >> ./common/arch/arm64/configs/gki_defconfig
-          #echo "CONFIG_DEFAULT_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
-          #echo 'CONFIG_DEFAULT_TCP_CONG="bbr"' >> ./common/arch/arm64/configs/gki_defconfig
-          #echo "CONFIG_NET_SCH_DEFAULT=y" >> ./common/arch/arm64/configs/gki_defconfig
-          #echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
-          #echo 'CONFIG_DEFAULT_NET_SCH="fq"' >> ./common/arch/arm64/configs/gki_defconfig
-          #echo "CONFIG_NET_SCH_HTB=n" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DEFAULT_CUBIC=n" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DEFAULT_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
+          if [ "${{ inputs.kernel_version }}" == "6.6" ]; then
+            echo 'CONFIG_DEFAULT_TCP_CONG="bbr3"' >> ./common/arch/arm64/configs/gki_defconfig
+          else
+            echo 'CONFIG_DEFAULT_TCP_CONG="bbr"' >> ./common/arch/arm64/configs/gki_defconfig
+          fi
+          echo "CONFIG_NET_SCH_DEFAULT=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo 'CONFIG_DEFAULT_NET_SCH="fq"' >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_SCH_HTB=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig
-          
-          # Add scheduler config setting
-          echo "CONFIG_SCHEDSTATS=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_SCHED_INFO=n" >> ./common/arch/arm64/configs/gki_defconfig
-          sed -i '/^  __traceiter_sched_stat_blocked$/d; /^  __traceiter_sched_stat_iowait$/d; /^  __traceiter_sched_stat_sleep$/d; /^  __traceiter_sched_stat_wait$/d' ./common/android/abi_gki_aarch64_oplus
-          sed -i '/^  __tracepoint_sched_stat_blocked$/d; /^  __tracepoint_sched_stat_iowait$/d; /^  __tracepoint_sched_stat_sleep$/d; /^  __tracepoint_sched_stat_wait$/d' ./common/android/abi_gki_aarch64_oplus
-          sed -i '/^  __traceiter_sched_stat_blocked$/d; /^  __traceiter_sched_stat_iowait$/d; /^  __traceiter_sched_stat_sleep$/d; /^  __traceiter_sched_stat_wait$/d' ./msm-kernel/android/abi_gki_aarch64_oplus
-          sed -i '/^  __tracepoint_sched_stat_blocked$/d; /^  __tracepoint_sched_stat_iowait$/d; /^  __tracepoint_sched_stat_sleep$/d; /^  __tracepoint_sched_stat_wait$/d' ./msm-kernel/android/abi_gki_aarch64_oplus
-          sed -i '/^$/d' ./common/android/abi_gki_aarch64_oplus
-          sed -i '/^$/d' ./msm-kernel/android/abi_gki_aarch64_oplus
           
           # Add rcu config setting
           echo "CONFIG_RCU_TRACE=n" >> ./common/arch/arm64/configs/gki_defconfig
@@ -250,6 +268,12 @@ jobs:
 
           # Add personal config setting
           echo "CONFIG_IP_NF_TARGET_ECN=y" >> ./common/arch/arm64/configs/gki_defconfig
+
+          # Disable mq and force bbr3
+          sed -i 's/qdisc_create_dflt(txq, \&mq_qdisc_ops, TC_H_ROOT, NULL);/qdisc_create_dflt(txq, \&fq_qdisc_ops, TC_H_ROOT, NULL);/' ./common/net/sched/sch_generic.c
+          if [ "${{ inputs.kernel_version }}" == "6.6" ]; then
+            sed -i '/^[[:space:]]*default "bbr" if DEFAULT_BBR$/s/"bbr"/"bbr3"/' ./common/net/ipv4/Kconfig
+          fi
 
       - name: Force ECN + Reduce overhead
         #if: ${{ inputs.kernel_version == '6.6' }}
@@ -313,15 +337,16 @@ jobs:
           tar -cf "source-patched-$CONFIG.tar.gz" \
           --use-compress-program=pigz \
           --exclude='.git' --exclude='out' \
-          -C "$CONFIG/kernel_platform/common" .
+          -C "$CONFIG/kernel_platform" common
 
       - name: Upload patched kernel source
         if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
         uses: actions/upload-artifact@v4
         with:
-          name: source-patched-${{ env.CONFIG }}.tar.gz
+          name: source-patched-${{ env.CONFIG }}
           path: source-patched-${{ env.CONFIG }}.tar.gz
           compression-level: 0
+          retention-days: 2
 
       - name: Clear patched kernel source
         if: ${{ inputs.make_release == false && inputs.model == 'OP13' }}
