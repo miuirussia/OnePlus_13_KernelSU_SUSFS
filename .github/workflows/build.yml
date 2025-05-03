@@ -147,7 +147,7 @@ jobs:
           git fetch google-bbr v3
           git show-ref --verify --quiet refs/remotes/google-bbr/v3 || { echo "Error: google-bbr/v3 branch not found"; exit 1; }
           git merge google-bbr/v3 --allow-unrelated-histories -m "Merge BBR v3 into kernel"
-          sed -i 's/^\([[:space:]]*\)\.name\([[:space:]]*\)=\([[:space:]]*\)"bbr",/\1.name\2=\3"bbr3",/' ./common/net/ipv4/tcp_bbr.c
+          #sed -i 's/^\([[:space:]]*\)\.name\([[:space:]]*\)=\([[:space:]]*\)"bbr",/\1.name\2=\3"bbr3",/' ./common/net/ipv4/tcp_bbr.c
 
       - name: Add KernelSU
         run: |
@@ -248,7 +248,7 @@ jobs:
           if [ "${{ inputs.kernel_version }}" == "6.6" ]; then
             echo "CONFIG_DEFAULT_CUBIC=n" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_DEFAULT_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo 'CONFIG_DEFAULT_TCP_CONG="bbr3"' >> ./common/arch/arm64/configs/gki_defconfig
+            echo 'CONFIG_DEFAULT_TCP_CONG="bbr"' >> ./common/arch/arm64/configs/gki_defconfig
           fi
           #echo "CONFIG_NET_SCH_DEFAULT=y" >> ./common/arch/arm64/configs/gki_defconfig
           #echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -267,10 +267,6 @@ jobs:
           # Add personal config setting
           echo "CONFIG_IP_NF_TARGET_ECN=y" >> ./common/arch/arm64/configs/gki_defconfig
 
-          # Add debug config setting
-          echo "CONFIG_CONTEXT_SWITCH_TRACER=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_NETFILTER_XT_TARGET_TRACE=n" >> ./common/arch/arm64/configs/gki_defconfig
-
       - name: Force ECN + Reduce overhead
         #if: ${{ inputs.kernel_version == '6.6' }}
         run: |
@@ -283,7 +279,6 @@ jobs:
           sed -i 's/net->ipv4.sysctl_tcp_pacing_ca_ratio = 120;/net->ipv4.sysctl_tcp_pacing_ca_ratio = 110;/' tcp_ipv4.c
           grep "sysctl_tcp_pacing" tcp_ipv4.c
           ls -t | grep -E 'tcp_|sysctl_'
-          sed -i '/^[[:space:]]*default "bbr" if DEFAULT_BBR$/s/"bbr"/"bbr3"/' Kconfig
 
       - name: Run sed and perl Commands
         run: |
