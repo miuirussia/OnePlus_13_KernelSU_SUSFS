@@ -179,14 +179,14 @@ jobs:
           
           echo "Applying next SUSFS patches..."
           cp ../../../kernel_patches/next/kernel-patch-susfs-v1.5.7-to-KernelSU-Next.patch ./
-          patch -p1 --forward < kernel-patch-susfs-v1.5.7-to-KernelSU-Next.patch || true
+          patch -p1 < kernel-patch-susfs-v1.5.7-to-KernelSU-Next.patch
           
           # Change to common directory and apply SUSFS patch
           cd ../common
           if [ "${{ inputs.soc }}" == "sun" ]; then
             sed -i '/#include <trace\/hooks\/blk.h>/a #include <trace/hooks/fs.h>' ./fs/namespace.c
           fi
-          patch -p1 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch || true
+          patch -p1 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch
 
       - name: Apply KSU Hooks
         run: |
@@ -202,7 +202,7 @@ jobs:
           cd "$CONFIG/kernel_platform/common"
           # Apply additional patch
           cp ../../../kernel_patches/69_hide_stuff.patch ./
-          patch -p1 -F 3 < 69_hide_stuff.patch
+          patch -p1 --fuzz=3 < 69_hide_stuff.patch
 
       - name: Add SUSFS Configuration Settings
         run: |
@@ -419,7 +419,7 @@ jobs:
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.model }}_${{ inputs.android_version }}_${{ inputs.kernel_version }}_Next_SUSFS_AnyKernel3
+          name: kernel-${{ env.CONFIG }}
           compression-level: 0
           path: |
             *.zip
