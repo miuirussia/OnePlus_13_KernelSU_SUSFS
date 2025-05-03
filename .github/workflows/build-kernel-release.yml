@@ -156,7 +156,7 @@ jobs:
         [+] KernelSU-Next ☯
         [+] SUSFS ඞ
         [+] Magic Mount Support | Shamiko isn't needed anymore!
-        [+] Google BBRv3 Support
+        [+] Google BBR Support
         [+] Maphide LineageOS Detections
         [+] Futile Maphide for jit-zygote-cache Detections
         [+] Mountify Support
