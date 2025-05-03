@@ -269,7 +269,6 @@ jobs:
 
           # Add debug config setting
           echo "CONFIG_CONTEXT_SWITCH_TRACER=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_TRACE_MMIO_ACCESS=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_NETFILTER_XT_TARGET_TRACE=n" >> ./common/arch/arm64/configs/gki_defconfig
 
       - name: Force ECN + Reduce overhead
