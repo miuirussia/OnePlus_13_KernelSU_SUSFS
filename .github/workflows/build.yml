@@ -137,7 +137,7 @@ jobs:
         run: |
           rm -v "source-original-$CONFIG.tar.gz"
 
-      - name: Merge BBR v3 into Kernel Source, part 1, common
+      - name: Merge BBR3 into Kernel Source (common)
         if: ${{ inputs.kernel_version == '6.6' }}
         run: |
           cd "$CONFIG/kernel_platform/common"
@@ -146,7 +146,7 @@ jobs:
           git remote add google-bbr https://github.com/google/bbr.git
           git fetch google-bbr v3
           git show-ref --verify --quiet refs/remotes/google-bbr/v3 || { echo "Error: google-bbr/v3 branch not found"; exit 1; }
-          git merge google-bbr/v3 --allow-unrelated-histories -m "Merge BBR v3 into kernel"
+          git merge -X theirs google-bbr/v3 --allow-unrelated-histories -m "Merge BBR v3 into kernel"
           
           echo "Applying BBRv3 additional patches..."
           cp ./gtests/net/tcp/bbr/nsperf/*.patch ./
@@ -197,15 +197,15 @@ jobs:
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/kernel_platform/common"
-          # Apply additional patch
+          # Apply hooks patch
           cp ../../../kernel_patches/next/syscall_hooks.patch ./
-          patch -p1 --fuzz=3 < ./syscall_hooks.patch
+          patch -p1 --fuzz=3 < syscall_hooks.patch
 
       - name: Apply Hide Stuff Patches
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/kernel_platform/common"
-          # Apply additional patch
+          # Apply spoof patch
           cp ../../../kernel_patches/69_hide_stuff.patch ./
           patch -p1 --fuzz=3 < 69_hide_stuff.patch
 
@@ -268,7 +268,7 @@ jobs:
           echo "CONFIG_IP_NF_TARGET_ECN=y" >> ./common/arch/arm64/configs/gki_defconfig
 
       - name: Force ECN + Reduce overhead
-        #if: ${{ inputs.kernel_version == '6.6' }}
+        if: ${{ inputs.kernel_version == '6.6' || inputs.kernel_version == '6.1' }}
         run: |
           cd "$CONFIG/kernel_platform/common/net/ipv4"
           sed -i 's/net->ipv4.sysctl_tcp_ecn = 2;/net->ipv4.sysctl_tcp_ecn = 1;/' tcp_ipv4.c
@@ -400,6 +400,10 @@ jobs:
             # cp ./out/dist/vendor_boot.img ../AnyKernel3/
           fi
 
+          if [ "${{ inputs.model }}" == "OP13" ]; then
+            cp ./out/dist/dtbo.img ../AnyKernel3/
+          fi
+
       - name: Create ZIP Files for Different Formats
         run: |
           echo "Navigating to AnyKernel3 directory..."
@@ -412,6 +416,12 @@ jobs:
 
           # Fengchi Patch for OPAce5Pro
           if [ "${{ inputs.model }}" == "OPAce5Pro" ]; then
+            sed -i 's/hmbird/xxbird/g' dtbo.img
+            zip -r "../$ZIP_NAME-CN-version.zip" ./*
+          fi
+
+          # Fengchi Patch for OP13
+          if [ "${{ inputs.model }}" == "OP13" ]; then
             sed -i 's/hmbird/xxbird/g' dtbo.img
             zip -r "../$ZIP_NAME-CN-version.zip" ./*
           fi
