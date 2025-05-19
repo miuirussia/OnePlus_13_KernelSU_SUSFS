@@ -146,7 +146,7 @@ jobs:
         SUSFS Module:
         -> https://github.com/sidex15/ksu_module_susfs
         
-        BBR Enabler Module:
+        BBR Optimizer Module:
         -> https://github.com/fatalcoder524/TCP_Optimiser_Module
         
         Mountify Module:
@@ -158,8 +158,8 @@ jobs:
         Features:
         [+] KernelSU-Next ☯
         [+] SUSFS ඞ
-        [+] Full Magic Mount Support | Shamiko isn't needed anymore!
-        [+] Google BBRv3 Support | Use [this](https://github.com/fatalcoder524/TCP_Optimiser_Module) to enable
+        [+] Optimized for Magic Mount usage | Shamiko isn't needed anymore!
+        [+] Google BBR or BBRv3 Support | Use [this](https://github.com/fatalcoder524/TCP_Optimiser_Module) to enable | BBRv3 only for kernels 6.6+
         [+] Maphide LineageOS Detections
         [+] Futile Maphide for jit-zygote-cache Detections
         [+] Mountify Support
