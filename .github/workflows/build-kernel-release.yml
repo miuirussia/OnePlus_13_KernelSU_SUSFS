@@ -159,7 +159,7 @@ jobs:
         [+] KernelSU-Next ☯
         [+] SUSFS ඞ
         [+] Optimized for Magic Mount usage | Shamiko isn't needed anymore!
-        [+] Google BBR or BBRv3 Support | Use [this](https://github.com/fatalcoder524/TCP_Optimiser_Module) to enable | BBRv3 only for kernels 6.6+
+        [+] Google BBR Support | Use [this](https://github.com/fatalcoder524/TCP_Optimiser_Module) to enable
         [+] Maphide LineageOS Detections
         [+] Futile Maphide for jit-zygote-cache Detections
         [+] Mountify Support
