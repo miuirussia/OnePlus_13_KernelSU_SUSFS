@@ -156,15 +156,13 @@ jobs:
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           sed -i "s/DKSU_VERSION=11998/DKSU_VERSION=${KSU_VERSION}/" Makefile
 
-      - name: Git cherry-pick from next-susfs-dev
+      - name: Cherry-pick commits from next-susfs-dev
         run: |
           cd ..
-          git config --global user.name "Build"
-          git config --global user.email "q543069760@gmail.com"
-          git cherry-pick -X theirs c193c9fa31fe76077dfa3e71dda1d290092fba7b
-          git cherry-pick -X theirs 8df2cbcade8a46eef98fb2ed0deb68ad51155232
-          git cherry-pick -X theirs 30707682565083e497485edc4d7764924e2d042f
-          git cherry-pick -X theirs 1ac3a3a112abae73801fd52fe32ea8749407ff8d
+          curl https://github.com/KernelSU-Next/KernelSU-Next/commit/c193c9fa31fe76077dfa3e71dda1d290092fba7b.patch | patch -p1
+          curl https://github.com/KernelSU-Next/KernelSU-Next/commit/8df2cbcade8a46eef98fb2ed0deb68ad51155232.patch | patch -p1
+          curl https://github.com/KernelSU-Next/KernelSU-Next/commit/30707682565083e497485edc4d7764924e2d042f.patch | patch -p1
+          curl https://github.com/KernelSU-Next/KernelSU-Next/commit/1ac3a3a112abae73801fd52fe32ea8749407ff8d.patch | patch -p1
 
       - name: Apply SUSFS Patches
         run: |
@@ -258,6 +256,21 @@ jobs:
           echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig
+          
+          # Add hibernation config setting
+          if grep "CONFIG_HIBERNATION_COMP_LZ4" ./common/arch/arm64/configs/gki_defconfig && grep "CONFIG_HIBERNATION_COMP_LZO=y" ./common/arch/arm64/configs/gki_defconfig; then
+            echo "CONFIG_HIBERNATION_COMP_LZO=n" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_HIBERNATION_COMP_LZ4=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo 'CONFIG_HIBERNATION_DEF_COMP="lz4"' >> ./common/arch/arm64/configs/gki_defconfig
+          fi
+          
+          # Add zram config setting
+          if grep "CONFIG_ZRAM_DEF_COMP_LZ4" ./common/arch/arm64/configs/gki_defconfig && grep -E "CONFIG_ZRAM_DEF_COMP_LZORLE=y|CONFIG_ZRAM_DEF_COMP_LZO=y" ./common/arch/arm64/configs/gki_defconfig; then
+            echo "CONFIG_ZRAM_DEF_COMP_LZORLE=n" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_ZRAM_DEF_COMP_LZO=n" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_ZRAM_DEF_COMP_LZ4=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo 'CONFIG_ZRAM_DEF_COMP="lz4"' >> ./common/arch/arm64/configs/gki_defconfig
+          fi
           
           # Add rcu config setting
           echo "CONFIG_RCU_TRACE=n" >> ./common/arch/arm64/configs/gki_defconfig
