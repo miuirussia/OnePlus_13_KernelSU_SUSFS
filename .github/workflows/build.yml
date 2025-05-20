@@ -148,13 +148,23 @@ jobs:
           cd "$CONFIG/kernel_platform"
           
           echo "Adding KernelSU..."
-          curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next-susfs/kernel/setup.sh" | bash -s next-susfs-dev
+          curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s next
           
           git submodule update --init --recursive
           cd KernelSU-Next/kernel
-          KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD) "+" 10198)
+          KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD) "+" 10200)
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           sed -i "s/DKSU_VERSION=11998/DKSU_VERSION=${KSU_VERSION}/" Makefile
+
+      - name: Git cherry-pick from next-susfs-dev
+        run: |
+          cd ..
+          git config --global user.name "Build"
+          git config --global user.email "q543069760@gmail.com"
+          git cherry-pick -X theirs c193c9fa31fe76077dfa3e71dda1d290092fba7b
+          git cherry-pick -X theirs 8df2cbcade8a46eef98fb2ed0deb68ad51155232
+          git cherry-pick -X theirs 30707682565083e497485edc4d7764924e2d042f
+          git cherry-pick -X theirs 1ac3a3a112abae73801fd52fe32ea8749407ff8d
 
       - name: Apply SUSFS Patches
         run: |
