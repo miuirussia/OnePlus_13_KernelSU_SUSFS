@@ -165,6 +165,7 @@ jobs:
         [+] Mountify Support
         [+] Unlimited Hotspot Support
         [+] Forced ECN (Explicit Congestion Notification) for all connections by default
+        [+] Use LZ4 compression algorithm for ZRAM and Hybernation by default if available
         [+] Some minor optimizations
 
     steps:
@@ -191,10 +192,10 @@ jobs:
       - name: Create GitHub Release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ env.NEW_TAG }}  # Use the generated tag for the release
-          prerelease: false  # Mark the release as a pre-release
-          release_name: ${{ env.RELEASE_NAME }}  # Pass the RELEASE_NAME to the action
-          body: ${{ env.RELEASE_NOTES }}  # Pass the RELEASE_NOTES to the action
+          tag_name: ${{ env.NEW_TAG }}
+          prerelease: false
+          release_name: ${{ env.RELEASE_NAME }}
+          body: ${{ env.RELEASE_NOTES }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEW_TAG: ${{ env.NEW_TAG }}
