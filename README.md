@@ -1,5 +1,5 @@
 # OnePlus_13_KernelSU_SUSFS
-OnePlus 13 Kernel with KernelSU Next &amp; SUSFS (personal fork)
+OnePlus 13 Kernel with SukiSU Ultra &amp; SUSFS (personal fork)
 
 ## Your warranty is <ins>no longer valid!</ins>
 

@@ -1,10 +1,7 @@
 name: Get Manager
-permissions:
-  contents: write  # Allow writing to repository contents (for pushing tags)
-  actions: read   # Allows triggering actions
 
 on:
-  workflow_call: # This allows this workflow to be called from another workflow
+  workflow_call:
 
 jobs:
   get_ksu_manager:

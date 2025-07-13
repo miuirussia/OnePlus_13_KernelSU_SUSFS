@@ -1,9 +1,5 @@
 name: Build and Release OnePlus 13 Kernel
 
-permissions:
-  contents: write
-  actions: write
-
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: true
