@@ -99,6 +99,9 @@ jobs:
           git clone https://github.com/ShirkNeko/susfs4ksu.git -b "$SUSFS_BRANCH"
           git clone https://github.com/TheWildJames/kernel_patches.git
 
+          # SukiSU patches
+          git clone https://github.com/ShirkNeko/SukiSU_patch.git
+
       - name: Initialize and Sync Kernel Source
         run: |
           echo "Creating folder for configuration: $CONFIG..."
@@ -144,8 +147,6 @@ jobs:
 
       - name: Apply KSUN Hooks
         run: |
-          tree
-
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/kernel_platform/common"
           # Apply hooks patch
