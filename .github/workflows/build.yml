@@ -144,6 +144,8 @@ jobs:
 
       - name: Apply KSUN Hooks
         run: |
+          tree
+
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/kernel_platform/common"
           # Apply hooks patch
