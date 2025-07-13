@@ -311,50 +311,45 @@ jobs:
           rm -v "source-patched-$CONFIG.tar.gz"
 
       - name: Build the Kernel
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 60
-          max_attempts: 3
-          retry_on: timeout
-          command: |
-            echo "Changing to configuration directory: $CONFIG..."
-            cd "$CONFIG"
-            
-            echo "Building the kernel..."
-            # Clear Cache
-            sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'
-            
-            rm ./kernel_platform/common/android/abi_gki_protected_exports_* || echo "No protected exports!"
-            rm ./kernel_platform/msm-kernel/android/abi_gki_protected_exports_* || echo "No protected exports!"
-            
-            BUILD_TYPE="gki"
-            BAZEL_ARGS=(--jobs=$(nproc --all) --lto=thin --verbose_failures)
-            if [ "${{ inputs.soc }}" == "sun" ]; then
-              BUILD_TYPE="perf"
-              BAZEL_ARGS+=(-g)
-            fi
-            
-            (stdbuf -oL bash -c '
-              while true; do
-                echo "=== $(date) ==="
-                free -h
-                echo "======"
-                df -h
-                echo "======"
-                top -b -n 1 | head -n 15
-                echo ""
-                sleep 60
-              done
-            ') &
-            MONITOR_PID=$!
-            trap "kill $MONITOR_PID" EXIT
-            
-            if [ -f ./kernel_platform/build_with_bazel.py ]; then
-              ./kernel_platform/oplus/bazel/oplus_modules_variant.sh ${{ inputs.soc }} "$BUILD_TYPE" ""
-              ./kernel_platform/build_with_bazel.py -t ${{ inputs.soc }} $BUILD_TYPE "${BAZEL_ARGS[@]}" -o "$(pwd)/out"
-            else
-              LTO=thin ./kernel_platform/oplus/build/oplus_build_kernel.sh ${{ inputs.soc }} "$BUILD_TYPE"
-            fi
+        run: |
+          echo "Changing to configuration directory: $CONFIG..."
+          cd "$CONFIG"
+          
+          echo "Building the kernel..."
+          # Clear Cache
+          sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'
+          
+          rm ./kernel_platform/common/android/abi_gki_protected_exports_* || echo "No protected exports!"
+          rm ./kernel_platform/msm-kernel/android/abi_gki_protected_exports_* || echo "No protected exports!"
+          
+          BUILD_TYPE="gki"
+          BAZEL_ARGS=(--jobs=$(nproc --all) --lto=thin --verbose_failures)
+          if [ "${{ inputs.soc }}" == "sun" ]; then
+            BUILD_TYPE="perf"
+            BAZEL_ARGS+=(-g)
+          fi
+          
+          (stdbuf -oL bash -c '
+            while true; do
+              echo "=== $(date) ==="
+              free -h
+              echo "======"
+              df -h
+              echo "======"
+              top -b -n 1 | head -n 15
+              echo ""
+              sleep 60
+            done
+          ') &
+          MONITOR_PID=$!
+          trap "kill $MONITOR_PID" EXIT
+          
+          if [ -f ./kernel_platform/build_with_bazel.py ]; then
+            ./kernel_platform/oplus/bazel/oplus_modules_variant.sh ${{ inputs.soc }} "$BUILD_TYPE" ""
+            ./kernel_platform/build_with_bazel.py -t ${{ inputs.soc }} $BUILD_TYPE "${BAZEL_ARGS[@]}" -o "$(pwd)/out"
+          else
+            LTO=thin ./kernel_platform/oplus/build/oplus_build_kernel.sh ${{ inputs.soc }} "$BUILD_TYPE"
+          fi
 
       - name: Copy Images
         run: |
