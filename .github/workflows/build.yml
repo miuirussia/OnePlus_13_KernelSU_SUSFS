@@ -46,11 +46,13 @@ jobs:
           sudo swapon /swapfile
           free -h
 
-      - name: Set Cache Environment
+      - name: Set cache environment
         run: |
-          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
-          mkdir -p "$HOME/.ccache"
-          echo "set: $HOME/.ccache"
+          echo "BUILD_CACHE_DIR=$HOME/.build_cache" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$HOME/.build_cache/ccache" >> $GITHUB_ENV
+          echo "BAZEL_CACHE_DIR=$HOME/.build_cache/bazel" >> $GITHUB_ENV
+          mkdir -p "$HOME/.build_cache/ccache" "$HOME/.build_cache/bazel"
+          echo "cache configure done"
 
       - name: Install dependencies
         run: |
@@ -67,13 +69,13 @@ jobs:
           chmod a+rx ./git-repo/repo
           echo "REPO=$GITHUB_WORKSPACE/./git-repo/repo" >> $GITHUB_ENV
 
-      - name: Restore ccache
+      - name: Restore cache
         uses: actions/cache@v3
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ inputs.android_version }}-${{ inputs.kernel_version }}-ccache-${{ github.sha }}
+          path: ${{ env.BUILD_CACHE_DIR }}
+          key: ${{ inputs.android_version }}-${{ inputs.kernel_version }}-build-cache-${{ github.sha }}
           restore-keys: |
-            ${{ inputs.android_version }}-${{ inputs.kernel_version }}-ccache-
+            ${{ inputs.android_version }}-${{ inputs.kernel_version }}-build-cache-
 
       - name: Initialize Ccache
         run: |
@@ -359,7 +361,7 @@ jobs:
           rm ./kernel_platform/msm-kernel/android/abi_gki_protected_exports_* || echo "No protected exports!"
 
           BUILD_TYPE="gki"
-          BAZEL_ARGS=(--jobs=$(nproc --all) --lto=thin --sandbox_writable_path=${{ env.CCACHE_DIR }} --verbose_failures)
+          BAZEL_ARGS=(--jobs=$(nproc --all) --lto=thin --output_user_root=${{ env.BAZEL_CACHE_DIR }} --verbose_failures)
           if [ "${{ inputs.soc }}" == "sun" ]; then
             BUILD_TYPE="perf"
             BAZEL_ARGS+=(-g)
