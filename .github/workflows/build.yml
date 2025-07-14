@@ -248,23 +248,42 @@ jobs:
           # Run sed commands for modifications
           sed -i 's/check_defconfig//' ./common/build.config.gki
           sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl || echo "No stamp.bzl!"
-          sed -i 's/-dirty//' ./common/scripts/setlocalversion
-          sed -i 's/-dirty//' ./msm-kernel/scripts/setlocalversion
-          sed -i 's/-dirty//' ./external/dtc/scripts/setlocalversion
           sed -i 's/-dirty//' ./build/kernel/kleaf/workspace_status_stamp.py || echo "No workspace_status_stamp.py!"
 
-          if [ "${{ inputs.kernel_version }}" != "6.6" ]; then
-            sed -i '$s|echo "\$res"|echo "\$res-kdevlab"|' ./common/scripts/setlocalversion
-            sed -i '$s|echo "\$res"|echo "\$res-kdevlab"|' ./msm-kernel/scripts/setlocalversion
-            sed -i '$s|echo "\$res"|echo "\$res-kdevlab"|' ./external/dtc/scripts/setlocalversion
-          fi
+          ANDROID_VERSION=${{ inputs.android_version }}
+          KERNELVERSION=${{ inputs.kernel_version }}.30
+          RANDOM_DIGIT=$(od -An -N1 -tu1 < /dev/urandom | tr -d '[:space:]' | awk '{print $1 % 11}')
+          RANDOM_HASH=$(od -An -N7 -tx1 /dev/urandom | tr -d ' \n')
+          RANDOM_SUFFIX="${RANDOM_DIGIT}-g${RANDOM_HASH}-kdevlab"
 
-          if [ "${{ inputs.kernel_version }}" == "6.6" ]; then
-            sed -i '/LOCALVERSION/d' ./common/arch/arm64/configs/gki_defconfig
-            echo 'CONFIG_LOCALVERSION=""' >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_LOCALVERSION_AUTO=y" >> ./common/arch/arm64/configs/gki_defconfig
-            for file in $(find ${GITHUB_WORKSPACE} -type f -name 'setlocalversion' 2>/dev/null); do echo $file; sed -Ei 's/(^echo.+KERNELVERSION.+)/echo \"\$\(\1 \| cut -d- -f1-4\)-kdevlab\"/g' $file; done
-          fi
+          for path in \
+            kernel_platform/common/scripts/setlocalversion \
+            kernel_platform/msm-kernel/scripts/setlocalversion \
+            kernel_platform/external/dtc/scripts/setlocalversion; do
+
+            [ -f "$path" ] || continue
+
+            echo "Modifying: $path"
+
+            # Remove -dirty
+            sed -i 's/ -dirty//g' "$path"
+            sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' "$path"
+
+            if grep -q 'KERNELVERSION.*scm_version' "$path"; then
+              echo "Detected NEW setlocalversion format"
+              sed -i "s|echo \"\${KERNELVERSION}.*scm_version}\"|echo \"\${KERNELVERSION}-${ANDROID_VERSION}-${RANDOM_SUFFIX}\"|" "$path"
+
+            elif grep -q 'echo "\$res"' "$path"; then
+              echo "Detected OLD setlocalversion format"
+                sed -i "s/^res=.*/res=\"-${ANDROID_VERSION}-${RANDOM_SUFFIX}\"/" "$path"
+              fi
+            else
+              echo "Unknown format, appending echo manually"
+              echo "echo \"\$res-${RANDOM_SUFFIX}\"" >> "$path"
+            fi
+
+            chmod +x "$path"
+          done
 
           sed -i '/echo "LTO $LTO "/i export LTO=thin' ./oplus/build/oplus_setup.sh
           sed -i 's/export REPACK_IMG=true/export REPACK_IMG=false/g' ./oplus/build/oplus_setup.sh
