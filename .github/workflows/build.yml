@@ -307,7 +307,7 @@ jobs:
       - name: Restore bazel cache
         uses: actions/cache@v3
         with:
-          path: ${{ env.GITHUB_WORKSPACE }}/${{ env.CONFIG }}/bazel-cache
+          path: ${{ github.workspace }}/${{ env.CONFIG }}/bazel-cache
           key: ${{ inputs.android_version }}-${{ inputs.kernel_version }}-bazel-${{ github.sha }}
           restore-keys: |
             ${{ inputs.android_version }}-${{ inputs.kernel_version }}-bazel-
