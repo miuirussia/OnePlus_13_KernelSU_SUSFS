@@ -127,9 +127,9 @@ jobs:
 
           # Change to common directory and apply SUSFS patch
           cd ./common
-          if [ "${{ inputs.soc }}" == "sun" ]; then
-            sed -i '/#include <trace\/hooks\/blk.h>/a #include <trace/hooks/fs.h>' ./fs/namespace.c
-          fi
+          # Patch OnePlus 13 include
+          sed -i '/#include <trace\/hooks\/blk.h>/a #include <trace/hooks/fs.h>' ./fs/namespace.c
+
           patch -p1 --fuzz=3 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch
 
       - name: Apply KSUN Hooks
@@ -222,7 +222,6 @@ jobs:
           echo "CONFIG_IP_NF_TARGET_ECN=y" >> ./common/arch/arm64/configs/gki_defconfig
 
       - name: Force ECN + Reduce overhead
-        if: ${{ inputs.kernel_version == '6.6' || inputs.kernel_version == '6.1' }}
         run: |
           cd "$CONFIG/kernel_platform/common/net/ipv4"
           sed -i 's/net->ipv4.sysctl_tcp_ecn = 2;/net->ipv4.sysctl_tcp_ecn = 1;/' tcp_ipv4.c
@@ -272,11 +271,9 @@ jobs:
             if grep -q 'KERNELVERSION.*scm_version' "$path"; then
               echo "Detected NEW setlocalversion format"
               sed -i "s|echo \"\${KERNELVERSION}.*scm_version}\"|echo \"\${KERNELVERSION}-${ANDROID_VERSION}-${RANDOM_SUFFIX}\"|" "$path"
-
             elif grep -q 'echo "\$res"' "$path"; then
               echo "Detected OLD setlocalversion format"
-                sed -i "s/^res=.*/res=\"-${ANDROID_VERSION}-${RANDOM_SUFFIX}\"/" "$path"
-              fi
+              sed -i "s/^res=.*/res=\"-${ANDROID_VERSION}-${RANDOM_SUFFIX}\"/" "$path"
             else
               echo "Unknown format, appending echo manually"
               echo "echo \"\$res-${RANDOM_SUFFIX}\"" >> "$path"
@@ -323,14 +320,6 @@ jobs:
         run: |
           rm -v "source-patched-$CONFIG.tar.gz"
 
-      - name: Restore bazel cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/${{ env.CONFIG }}/bazel-cache
-          key: ${{ inputs.android_version }}-${{ inputs.kernel_version }}-bazel-${{ github.sha }}
-          restore-keys: |
-            ${{ inputs.android_version }}-${{ inputs.kernel_version }}-bazel-
-
       - name: Build the Kernel
         run: |
           echo "Changing to configuration directory: $CONFIG..."
@@ -353,10 +342,9 @@ jobs:
 
           BUILD_TYPE="gki"
           BAZEL_ARGS=(--jobs=$(nproc --all) --lto=thin --verbose_failures)
-          if [ "${{ inputs.soc }}" == "sun" ]; then
-            BUILD_TYPE="perf"
-            BAZEL_ARGS+=(-g)
-          fi
+          # OnePlus 13 adjustments 
+          BUILD_TYPE="perf"
+          BAZEL_ARGS+=(-g)
 
           (stdbuf -oL bash -c '
             while true; do
@@ -387,14 +375,7 @@ jobs:
 
           echo "Copying Image"
           cp ./out/dist/Image ../AnyKernel3/Image
-          if [ "${{ inputs.model }}" == "OPAce5Pro" ]; then
-            cp ./out/dist/dtbo.img ../AnyKernel3/
-            cp ./out/dist/system_dlkm.erofs.img ../AnyKernel3/system_dlkm.img
-          fi
-
-          if [ "${{ inputs.model }}" == "OP13" ]; then
-            cp ./out/dist/dtbo.img ../AnyKernel3/
-          fi
+          cp ./out/dist/dtbo.img ../AnyKernel3/
 
       - name: Create ZIP Files for Different Formats
         run: |
@@ -405,12 +386,6 @@ jobs:
           ZIP_NAME="AnyKernel3_${{ inputs.model }}_${{ inputs.android_version }}_${{ inputs.kernel_version }}_SukiSU_SUSFS.zip"
           echo "Creating zip file $ZIP_NAME..."
           zip -r "../$ZIP_NAME" ./*
-
-          # Fengchi Patch for OPAce5Pro
-          if [ "${{ inputs.model }}" == "OPAce5Pro" ]; then
-            sed -i 's/hmbird/xxbird/g' dtbo.img
-            zip -r "../$ZIP_NAME-CN-version.zip" ./*
-          fi
 
           # Fengchi Patch for OP13
           if [ "${{ inputs.model }}" == "OP13" ]; then
