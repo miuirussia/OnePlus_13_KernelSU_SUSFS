@@ -368,12 +368,21 @@ jobs:
             LTO=thin ./kernel_platform/oplus/build/oplus_build_kernel.sh ${{ inputs.soc }} "$BUILD_TYPE"
           fi
 
-      - name: Copy images
+      - name: Copy and patch images
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
 
-          echo "Copying Image"
+          echo "Patching image"
+          pushd ./out/dist
+          curl -LOSs --retry 5 --retry-delay 2 --retry-connrefused https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux
+          chmod +x patch_linux
+          ./patch_linux
+          rm -f Image
+          mv oImage Image
+          popd
+
+          echo "Copying image"
           cp ./out/dist/Image ../AnyKernel3/Image
           cp ./out/dist/dtbo.img ../AnyKernel3/
 
