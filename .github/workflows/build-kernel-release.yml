@@ -135,14 +135,6 @@ jobs:
             echo "Uploading $file..."
             gh release upload ${{ env.NEW_TAG }} "$file"
           done
-
-          for file in ./downloaded-artifacts/zram-module-*/*; do
-            if [ -d "$file" ]; then
-                continue
-            fi
-            echo "Uploading $file..."
-            gh release upload ${{ env.NEW_TAG }} "$file"
-          done
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
           NEW_TAG: ${{ env.NEW_TAG }}

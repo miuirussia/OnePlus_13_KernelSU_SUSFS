@@ -402,6 +402,7 @@ jobs:
           curl -s https://api.github.com/repos/FurLC/ZRAM-Module/releases/latest | \
             grep "browser_download_url" | grep "ZRAM-Module-.*\.zip" | cut -d '"' -f 4 | xargs wget -N
           unzip "$(ls -t ZRAM-Module-*.zip | head -1)" -d ZRAM-Module
+          rm ZRAM-Module-*.zip
           target="./ZRAM-Module/zram/zram.ko"
           search_paths=(
             "./$CONFIG/kernel_platform/out"
