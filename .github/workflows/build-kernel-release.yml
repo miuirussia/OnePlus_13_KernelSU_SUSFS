@@ -52,25 +52,25 @@ jobs:
       RELEASE_NAME: "OnePlus 13 Kernel With SukiSU Ultra & SUSFS"
       RELEASE_NOTES: |
         This release contains both the latest available SukiSU Ultra and SUSFS!
-        
+
         Modified Kernel Flasher:
         -> https://github.com/fatalcoder524/KernelFlasher
-        
+
         KSU Manager:
         -> https://github.com/SukiSU-Ultra/SukiSU-Ultra
-        
+
         SUSFS Module:
         -> https://github.com/sidex15/ksu_module_susfs
-        
+
         BBR Optimizer Module:
         -> https://github.com/fatalcoder524/TCP_Optimiser_Module
-        
+
         Mountify Module:
         -> https://github.com/backslashxx/mountify
-        
+
         Unlimited Hotspot Module:
         -> https://github.com/felikcat/unlimited-hotspot
-        
+
         Features:
         [+] SukiSU Ultra ☯
         [+] SUSFS ඞ
@@ -94,7 +94,7 @@ jobs:
         run: |
             LATEST_TAG=$(gh api repos/$REPO_OWNER/$REPO_NAME/tags --jq '.[0].name')
             if [ -z "$LATEST_TAG" ]; then
-              LATEST_TAG="v1.5.5-r0"
+              LATEST_TAG="v1.5.9-r0"
             fi
             NEW_TAG=$(echo "$LATEST_TAG" | awk -F'-r' '{suffix=$2; if (!suffix) suffix=0; suffix++; printf "%s-r%d", $1, suffix}')
             echo "New tag: $NEW_TAG"
@@ -129,6 +129,14 @@ jobs:
           done
 
           for file in ./downloaded-artifacts/manager/*; do
+            if [ -d "$file" ]; then
+                continue
+            fi
+            echo "Uploading $file..."
+            gh release upload ${{ env.NEW_TAG }} "$file"
+          done
+
+          for file in ./downloaded-artifacts/zram-module-*/*; do
             if [ -d "$file" ]; then
                 continue
             fi
