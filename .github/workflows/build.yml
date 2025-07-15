@@ -427,20 +427,13 @@ jobs:
             pushd ./ZRAM-Module
             echo "ZRAM_ALGO=lz4kd" > ./config.prop
             echo "ZRAM_SIZE=12884901888" >> ./config.prop
-            zip -r zram-module.zip .
+            zip -r ../zram-module.zip .
             popd
           else
             echo "Not found"
             echo "upload=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-
-      - name: Upload ZRAM Module
-        if: ${{ steps.zram_find.outputs.upload != 'false' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: zram-module-${{ env.CONFIG }}
-          path: zram-module.zip
 
       - name: Copy and patch images
         run: |
