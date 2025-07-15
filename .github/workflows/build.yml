@@ -233,6 +233,49 @@ jobs:
           grep "sysctl_tcp_pacing" tcp_ipv4.c
           ls -t | grep -E 'tcp_|sysctl_'
 
+      - name: Apply ZRAM
+        run: |
+          cd "$CONFIG/kernel_platform"
+
+          echo "Copy files"
+
+          cp -r ../../SukiSU_patch/other/zram/lz4k/include/linux/* ./common/include/linux
+          cp -r ../../SukiSU_patch/other/zram/lz4k/lib/* ./common/lib
+          cp -r ../../SukiSU_patch/other/zram/lz4k/crypto/* ./common/crypto
+          cp -r ../../SukiSU_patch/other/zram/lz4k_oplus ./common/lib/
+
+          echo "Apply LZ4KD"
+
+          cp ../../SukiSU_patch/other/zram/zram_patch/${{ github.event.inputs.android_version }}/lz4kd.patch ./common
+          pushd ./common
+          patch -p1 -F 3 < lz4kd.patch
+          popd
+
+          echo "Adjust configuration"
+
+          CONFIG_FILE=./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_ZSMALLOC=y" >> "$CONFIG_FILE"
+          sed -i 's/CONFIG_ZRAM=m/CONFIG_ZRAM=y/g' "$CONFIG_FILE"
+          if [  -e ./common/modules.bzl ]; then
+            sed -i 's/"drivers\/block\/zram\/zram\.ko",//g; s/"mm\/zsmalloc\.ko",//g' "./common/modules.bzl"
+          fi
+
+          if [  -e ./msm-kernel/modules.bzl ]; then
+            sed -i 's/"drivers\/block\/zram\/zram\.ko",//g; s/"mm\/zsmalloc\.ko",//g' "./msm-kernel/modules.bzl"
+            echo "CONFIG_ZSMALLOC=y" >> "msm-kernel/arch/arm64/configs/${{ github.event.inputs.soc }}-GKI.config"
+            echo "CONFIG_ZRAM=y" >> "msm-kernel/arch/arm64/configs/${{ github.event.inputs.soc }}-GKI.config"
+          fi
+
+          echo "CONFIG_MODULE_SIG_FORCE=n" >> "$CONFIG_FILE"
+
+          if grep -q "CONFIG_ZSMALLOC=y" "$CONFIG_FILE" && grep -q "CONFIG_ZRAM=y" "$CONFIG_FILE"; then
+            echo "CONFIG_CRYPTO_LZ4HC=y" >> "$CONFIG_FILE"
+            echo "CONFIG_CRYPTO_LZ4K=y" >> "$CONFIG_FILE"
+            echo "CONFIG_CRYPTO_LZ4KD=y" >> "$CONFIG_FILE"
+            echo "CONFIG_CRYPTO_842=y" >> "$CONFIG_FILE"
+            echo "CONFIG_ZRAM_WRITEBACK=y" >> "$CONFIG_FILE"
+          fi
+
       - name: Run sed and perl Commands
         run: |
           echo "Changing to configuration directory: $CONFIG..."
