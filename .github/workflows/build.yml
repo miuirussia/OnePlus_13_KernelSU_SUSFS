@@ -260,6 +260,71 @@ jobs:
           echo "CONFIG_CRYPTO_LZ4K_OPLUS=y" >> "$CONFIG_FILE"
           echo "CONFIG_ZRAM_WRITEBACK=y" >> "$CONFIG_FILE"
 
+      - name: Upgrade LZ4
+        run: |
+          LZ4_VERSION="1.10.0"
+          LZ4_DOWNLOAD_URL="https://github.com/lz4/lz4/archive/refs/tags/v${LZ4_VERSION}.tar.gz"
+
+          cd "$CONFIG/kernel_platform/common"
+
+          mkdir -p lz4_temp && cd lz4_temp
+
+          curl -Ls "${LZ4_DOWNLOAD_URL}" -o lz4.tar.gz
+          tar -zxf lz4.tar.gz --strip-components=1
+
+          cp lib/lz4.c ../lib/lz4v2_core.c
+          cp lib/lz4.h ../lib/lz4v2_core.h
+          cp lib/lz4hc.c ../lib/lz4v2_hc.c
+          cp lib/lz4hc.h ../lib/lz4v2_hc.h
+
+          mkdir -p ../include/linux/lz4v2
+          cp lib/lz4.h ../include/linux/lz4v2/lz4.h
+          cp lib/lz4hc.h ../include/linux/lz4v2/lz4hc.h
+
+          sed -i 's/LZ4_compress_default/lz4v2_compress_default/g' ../lib/lz4v2_core.c ../lib/lz4v2_core.h
+          sed -i 's/LZ4_decompress_safe/lz4v2_decompress_safe/g' ../lib/lz4v2_core.c ../lib/lz4v2_core.h
+
+          sed -i 's/LZ4_compress_HC/lz4v2_compress_HC/g' ../lib/lz4v2_hc.c ../lib/lz4v2_hc.h
+
+          sed -i 's/LZ4_/LZ4V2_/g' ../lib/lz4v2_core.c ../lib/lz4v2_core.h ../lib/lz4v2_hc.c ../lib/lz4v2_hc.h
+
+          sed -i '1i#include <linux/types.h>' ../lib/lz4v2_core.c
+          sed -i '2i#include <linux/kernel.h>' ../lib/lz4v2_core.c
+          sed -i '3i#include <linux/module.h>' ../lib/lz4v2_core.c
+
+          sed -i '1i#include <linux/types.h>' ../lib/lz4v2_hc.c
+          sed -i '2i#include <linux/kernel.h>' ../lib/lz4v2_hc.c
+          sed -i '3i#include <linux/module.h>' ../lib/lz4v2_hc.c
+
+          cat >> ../lib/lz4v2_core.c << 'EOF'
+          MODULE_LICENSE("GPL");
+          MODULE_DESCRIPTION("LZ4 1.10.0 Compression (v2)");
+          MODULE_AUTHOR("LZ4 Project");
+          EXPORT_SYMBOL(lz4v2_compress_default);
+          EXPORT_SYMBOL(lz4v2_decompress_safe);
+          EOF
+
+          cat >> ../lib/lz4v2_hc.c << 'EOF'
+          MODULE_LICENSE("GPL");
+          MODULE_DESCRIPTION("LZ4HC 1.10.0 Compression (v2)");
+          MODULE_AUTHOR("LZ4 Project");
+          EXPORT_SYMBOL(lz4v2_compress_HC);
+          EOF
+
+          if ! grep -q "lz4v2_core.o" ../lib/Makefile; then
+            echo "obj-\$(CONFIG_LZ4V2_COMPRESS) += lz4v2_core.o" >> ../lib/Makefile
+            echo "obj-\$(CONFIG_LZ4V2_COMPRESS) += lz4v2_hc.o" >> ../lib/Makefile
+          fi
+
+          cd .. && rm -rf lz4_temp
+
+          # LZ4 1.10.0
+          CONFIG_FILE=./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_LZ4V2_COMPRESS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_LZ4V2_HC=y" >> "$CONFIG_FILE"
+          echo "CONFIG_LZ4V2_DEBUG=n" >> "$CONFIG_FILE"
+          echo "CONFIG_ZRAM_LZ4V2=y" >> "$CONFIG_FILE"
+
       - name: Run sed and perl Commands
         run: |
           echo "Changing to configuration directory: $CONFIG..."
@@ -392,46 +457,6 @@ jobs:
             ./kernel_platform/build_with_bazel.py -t ${{ inputs.soc }} $BUILD_TYPE "${BAZEL_ARGS[@]}" -o "$(pwd)/out"
           else
             LTO=thin ./kernel_platform/oplus/build/oplus_build_kernel.sh ${{ inputs.soc }} "$BUILD_TYPE"
-          fi
-
-      - name: Download and Unzip ZRAM
-        id: zram_find
-        run: |
-          set -e
-          sudo apt install -y unzip
-          git clone --depth 1 https://github.com/miuirussia/ZRAM-Module.git
-          rm -rf ./ZRAM-Module/.git
-          target="./ZRAM-Module/zram/zram.ko"
-          search_paths=(
-            "./$CONFIG/kernel_platform/out"
-            "./$CONFIG/device/qcom"
-          )
-          zram_path=""
-          for path in "${search_paths[@]}"; do
-            zram_path=$(find "$path" -type f -name "zram.ko" | head -n 1)
-            [ -n "$zram_path" ] && break
-          done
-          if [ -z "$zram_path" ]; then
-            zram_path=$(find "./$CONFIG" -type f -name "zram.ko" | head -n 1)
-          fi
-          if [ -n "$zram_path" ] && [ -f "$zram_path" ]; then
-            echo " ZRAM module file finally located at: $zram_path "
-            mkdir -p "$(dirname "$target")"
-            if [ "$(realpath "$zram_path")" != "$(realpath "$target")" ]; then
-              cp "$zram_path" "$target"
-            else
-              echo "Skip copy"
-            fi
-
-            pushd ./ZRAM-Module
-            echo "ZRAM_ALGO=lz4kd" > ./config.prop
-            echo "ZRAM_SIZE=12884901888" >> ./config.prop
-            zip -r ../zram-module.zip .
-            popd
-          else
-            echo "Not found"
-            echo "upload=false" >> "$GITHUB_OUTPUT"
-            exit 0
           fi
 
       - name: Copy and patch images
