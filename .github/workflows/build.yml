@@ -89,16 +89,6 @@ jobs:
           # SukiSU patches
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
 
-      - name: Build kernel patch
-        run: |
-          cd SukiSU_KernelPatch_patch/patch
-
-          mkdir build && cd build
-          cmake .. && make
-          mv patch patch_linux
-
-          echo "KERNELPATCH=$(pwd)/patch_linux" >> "$GITHUB_ENV"
-
       - name: Initialize and Sync Kernel Source
         run: |
           echo "Creating folder for configuration: $CONFIG..."
@@ -471,6 +461,8 @@ jobs:
 
       - name: Copy and patch images
         run: |
+          KERNELPATCH=$(pwd)/SukiSU_patch/kpm/patch_linux
+
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
 
