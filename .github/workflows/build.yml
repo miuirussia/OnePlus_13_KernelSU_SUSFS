@@ -492,9 +492,9 @@ jobs:
           cd ./AnyKernel3
 
           # Zip the files in the AnyKernel3 directory with a new naming convention
-          ZIP_NAME="AnyKernel3_${{ inputs.model }}_${{ inputs.android_version }}_${{ inputs.kernel_version }}_SukiSU_SUSFS.zip"
+          ZIP_NAME="AnyKernel3_${{ inputs.model }}_${{ inputs.android_version }}_${{ inputs.kernel_version }}_SukiSU_SUSFS"
           echo "Creating zip file $ZIP_NAME..."
-          zip -r "../$ZIP_NAME" ./*
+          zip -r "../$ZIP_NAME.zip" ./*
 
           # Fengchi Patch for OP13
           if [ "${{ inputs.model }}" == "OP13" ]; then
