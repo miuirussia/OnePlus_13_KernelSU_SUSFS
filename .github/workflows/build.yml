@@ -129,8 +129,13 @@ jobs:
 
           # Change to common directory and apply SUSFS patch
           cd ./common
-          # Patch OnePlus 13 include
-          sed -i '/#include <trace\/hooks\/blk.h>/a #include <trace/hooks/fs.h>' ./fs/namespace.c
+          
+          if ! grep -qxF '#include <trace/hooks/fs.h>' ./fs/namespace.c; then
+            echo "Patch OnePlus 13 include"
+            sed -i '/#include <trace\/hooks\/blk.h>/a #include <trace\/hooks\/fs.h>' ./fs/namespace.c
+          else
+            echo "Line already present. Skipping insert."
+          fi
 
           patch -p1 --fuzz=3 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch
 
